@@ -1,7 +1,7 @@
 // Builds assets/dashboard.svg: a terminal-style contributions panel for a GitHub profile README.
 //   node tools/build-dashboard.mjs [out=assets/dashboard.svg]      (env: GH_LOGIN, default asaldhghn)
 // Needs the GitHub CLI (`gh`) logged in locally, or GH_TOKEN set (as in a GitHub Action).
-// Pure Node: no browser. The contribution grid is drawn with ASCII glyphs in rose reds.
+// Pure Node: no browser. The contribution grid is drawn with ASCII glyphs in greens.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -39,7 +39,7 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const maxDay = Math.max(1, ...days.map((d) => d.contributionCount));
 const level = (n) => (n === 0 ? 0 : Math.min(4, Math.ceil((4 * n) / maxDay)));
 const GLYPH = ['.', '+', '*', '%', '@'];
-const COL = ['#1b2c23', '#7c2a3c', '#a8304a', '#d83a50', '#f2707e'];
+const COL = ['#1b2c23', '#1f5a3e', '#2f8059', '#45a672', '#7fd29c'];
 
 const gx0 = 84, gy0 = 100, px = (W - gx0 - 40) / weeks.length, py = 15;
 let grid = '';
@@ -76,13 +76,13 @@ const bx0 = 470, by1 = 388, bh = 78, bw = 20, bgap = 7;
 const maxM = Math.max(1, ...months.map((m) => m.n));
 const bars = months.map((m, n) => {
   const h = Math.max(2, Math.round((m.n / maxM) * bh)), x = bx0 + n * (bw + bgap);
-  return `<g opacity="0"><set attributeName="opacity" to="1" begin="${(1.2 + n * 0.06).toFixed(2)}s" fill="freeze"/><rect x="${x}" y="${by1 - h}" width="${bw}" height="${h}" rx="2" fill="#a8304a"/><rect x="${x}" y="${by1 - h}" width="${bw}" height="3" rx="1.5" fill="#f2707e"/><text class="lab" x="${x + bw / 2}" y="${by1 + 16}" text-anchor="middle">${monthName(m.key)}</text></g>`;
+  return `<g opacity="0"><set attributeName="opacity" to="1" begin="${(1.2 + n * 0.06).toFixed(2)}s" fill="freeze"/><rect x="${x}" y="${by1 - h}" width="${bw}" height="${h}" rx="2" fill="#2f8059"/><rect x="${x}" y="${by1 - h}" width="${bw}" height="3" rx="1.5" fill="#7fd29c"/><text class="lab" x="${x + bw / 2}" y="${by1 + 16}" text-anchor="middle">${monthName(m.key)}</text></g>`;
 }).join('');
 const barTitle = `<text class="lab" x="${bx0}" y="${ty0 + 10}">$ contributions / month</text>`;
 
 const FONT = 'ui-monospace,SFMono-Regular,Menlo,Consolas,&quot;Liberation Mono&quot;,monospace';
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(LOGIN)}'s contribution activity: ${total} contributions in the last year, current streak ${current} days, longest streak ${longest} days.">
-<style>text{font-family:${FONT};font-size:13px;text-anchor:middle;font-weight:700}.lab{font-size:11px;font-weight:400;fill:#4f7d66;text-anchor:start}.val{font-size:19px;fill:#e8a0a8;text-anchor:start}.t{font-size:12px;font-weight:400;fill:#4f7d66;text-anchor:start}.cap{font-size:12px;font-weight:400;fill:#5f8f78;text-anchor:start}</style>
+<style>text{font-family:${FONT};font-size:13px;text-anchor:middle;font-weight:700}.lab{font-size:11px;font-weight:400;fill:#4f7d66;text-anchor:start}.val{font-size:19px;fill:#8fcba5;text-anchor:start}.t{font-size:12px;font-weight:400;fill:#4f7d66;text-anchor:start}.cap{font-size:12px;font-weight:400;fill:#5f8f78;text-anchor:start}</style>
 <rect width="${W}" height="${H}" rx="14" fill="#050b08"/>
 <rect x=".5" y=".5" width="${W - 1}" height="${H - 1}" rx="14" fill="none" stroke="#17302a"/>
 <rect x="1" y="1" width="${W - 2}" height="36" rx="13" fill="#08120e"/>
