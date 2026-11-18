@@ -41,7 +41,8 @@ const level = (n) => (n === 0 ? 0 : Math.min(4, Math.ceil((4 * n) / maxDay)));
 const GLYPH = ['.', '+', '*', '%', '@'];
 const COL = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];   // GitHub dark-theme contribution greens
 
-const gx0 = 84, gy0 = 100, px = (W - gx0 - 40) / weeks.length, py = px, CELL = px - 2.4;
+// GitHub's own metrics: 10px cells, 3px gaps
+const px = 13, py = 13, CELL = 10, BOX_X = PAD, BOX_Y = 78, BOX_W = W - 2 * PAD, BOX_H = 164, gx0 = BOX_X + 52, gy0 = BOX_Y + 36;
 const jitter = (a, b) => { let h = Math.imul(a + 1, 374761393) + Math.imul(b + 1, 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 let grid = '';
 weeks.forEach((wk, wi) => {
@@ -58,11 +59,11 @@ weeks.forEach((wk, wi) => {
 let monthLabels = '', lastKey = '';
 weeks.forEach((wk, wi) => {
   const key = wk[0].date.slice(0, 7);
-  if (key !== lastKey && wi < weeks.length - 2) { monthLabels += `<text class="lab" x="${(gx0 + wi * px).toFixed(1)}" y="${gy0 - 8}">${monthName(key)}</text>`; lastKey = key; }
+  if (key !== lastKey && wi < weeks.length - 2) { monthLabels += `<text class="gh" x="${(gx0 + wi * px).toFixed(1)}" y="${gy0 - 7}">${monthName(key)}</text>`; lastKey = key; }
 });
-const dayLabels = [['Mon', 1], ['Wed', 3], ['Fri', 5]].map(([n, r]) => `<text class="lab" x="${PAD}" y="${gy0 + r * py + 9}">${n}</text>`).join('');
-const legendX = W - 40 - 150, legY = gy0 + 7 * py + 14;
-const legend = `<text class="lab" x="${legendX - 30}" y="${legY + 9}">Less</text>` + COL.map((c, k) => `<rect x="${legendX + 8 + k * 15}" y="${legY}" width="11" height="11" rx="2" fill="${c}"/>`).join('') + `<text class="lab" x="${legendX + 8 + 5 * 15 + 4}" y="${legY + 9}">More</text>`;
+const dayLabels = [['Mon', 1], ['Wed', 3], ['Fri', 5]].map(([n, r]) => `<text class="gh" x="${BOX_X + 14}" y="${gy0 + r * py + 9}">${n}</text>`).join('');
+const legY = BOX_Y + BOX_H - 28, legRight = BOX_X + BOX_W - 16, sqStart = legRight - 40 - 5 * 13 + 3;
+const legend = `<text class="gh" style="text-anchor:end" x="${sqStart - 6}" y="${legY + 9}">Less</text>` + COL.map((c, k) => `<rect x="${sqStart + k * 13}" y="${legY}" width="10" height="10" rx="2" fill="${c}"/>`).join('') + `<text class="gh" style="text-anchor:end" x="${legRight}" y="${legY + 9}">More</text>`;
 
 // stat tiles (3 × 2)
 const tiles = [
@@ -86,15 +87,17 @@ const barTitle = `<text class="lab" x="${bx0}" y="${ty0 + 10}">$ contributions /
 
 const FONT = 'ui-monospace,SFMono-Regular,Menlo,Consolas,&quot;Liberation Mono&quot;,monospace';
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(LOGIN)}'s contribution activity: ${total} contributions in the last year, current streak ${current} days, longest streak ${longest} days.">
-<style>text{font-family:${FONT};font-size:13px;text-anchor:middle;font-weight:700}.lab{font-size:11px;font-weight:400;fill:#4f7d66;text-anchor:start}.val{font-size:19px;fill:#8fcba5;text-anchor:start}.t{font-size:12px;font-weight:400;fill:#4f7d66;text-anchor:start}.cap{font-size:12px;font-weight:400;fill:#5f8f78;text-anchor:start}</style>
+<style>text{font-family:${FONT};font-size:13px;text-anchor:middle;font-weight:700}.lab{font-size:11px;font-weight:400;fill:#4f7d66;text-anchor:start}.val{font-size:19px;fill:#8fcba5;text-anchor:start}.t{font-size:12px;font-weight:400;fill:#4f7d66;text-anchor:start}.gh{font-family:-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;Noto Sans&quot;,Helvetica,Arial,sans-serif;font-size:12px;font-weight:400;fill:#e6edf3;text-anchor:start}.gh-h{font-family:-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;Noto Sans&quot;,Helvetica,Arial,sans-serif;font-size:15px;font-weight:400;fill:#e6edf3;text-anchor:start}.cap{font-size:12px;font-weight:400;fill:#5f8f78;text-anchor:start}</style>
 <rect width="${W}" height="${H}" rx="14" fill="#050b08"/>
 <rect x=".5" y=".5" width="${W - 1}" height="${H - 1}" rx="14" fill="none" stroke="#17302a"/>
 <rect x="1" y="1" width="${W - 2}" height="36" rx="13" fill="#08120e"/>
 <circle cx="24" cy="19" r="5.5" fill="#6b2f3b"/><circle cx="43" cy="19" r="5.5" fill="#6b5a2f"/><circle cx="62" cy="19" r="5.5" fill="#2f6b4a"/>
 <text class="t" x="90" y="23">${esc(LOGIN)}@github ~ % ./contributions.sh</text>
+<rect x="${BOX_X}" y="${BOX_Y}" width="${BOX_W}" height="${BOX_H}" rx="6" fill="#0d1117" stroke="#30363d"/>
 ${monthLabels}${dayLabels}
 ${grid}
-<text class="cap" x="${PAD}" y="${gy0 + 7 * py + 23}">${total.toLocaleString('en-US')} contributions in the last year</text>
+<text class="gh-h" x="${PAD}" y="${BOX_Y - 12}">${total.toLocaleString('en-US')} contributions in the last year</text>
+<text class="gh" x="${BOX_X + 14}" y="${legY + 9}">Learn how we count contributions</text>
 ${legend}
 <text class="t" x="${PAD}" y="${ty0 - 24}">${esc(LOGIN)}@github ~ % ./stats.sh</text>
 ${tileSvg}${barTitle}${bars}
