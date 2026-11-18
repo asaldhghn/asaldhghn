@@ -39,26 +39,30 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const maxDay = Math.max(1, ...days.map((d) => d.contributionCount));
 const level = (n) => (n === 0 ? 0 : Math.min(4, Math.ceil((4 * n) / maxDay)));
 const GLYPH = ['.', '+', '*', '%', '@'];
-const COL = ['#1b2c23', '#1f5a3e', '#2f8059', '#45a672', '#7fd29c'];
+const COL = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];   // GitHub dark-theme contribution greens
 
-const gx0 = 84, gy0 = 100, px = (W - gx0 - 40) / weeks.length, py = 15;
+const gx0 = 84, gy0 = 100, px = (W - gx0 - 40) / weeks.length, py = px, CELL = px - 2.4;
+const jitter = (a, b) => { let h = Math.imul(a + 1, 374761393) + Math.imul(b + 1, 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 let grid = '';
 weeks.forEach((wk, wi) => {
-  let cells = '';
   wk.forEach((d) => {
     const l = level(d.contributionCount);
-    cells += `<text x="${(gx0 + wi * px + px / 2).toFixed(1)}" y="${gy0 + d.weekday * py + 11}" fill="${COL[l]}">${GLYPH[l]}</text>`;
+    // the whole grid builds left → right (with a little scatter); brighter days land a touch later
+    const t = (0.2 + wi * 0.045 + jitter(wi, d.weekday) * 0.25 + l * 0.04).toFixed(2);
+    const cx = (gx0 + wi * px + CELL / 2).toFixed(1), cy = (gy0 + d.weekday * py + CELL / 2).toFixed(1);
+    grid += `<g transform="translate(${cx} ${cy})" opacity="0"><set attributeName="opacity" to="1" begin="${t}s" fill="freeze"/>` +
+      `<g><animateTransform attributeName="transform" type="scale" values="0.1;1.25;1" keyTimes="0;.6;1" dur="0.45s" begin="${t}s" fill="freeze"/>` +
+      `<rect x="${-CELL / 2}" y="${-CELL / 2}" width="${CELL.toFixed(1)}" height="${CELL.toFixed(1)}" rx="2" fill="${COL[l]}"/></g></g>`;
   });
-  grid += `<g opacity="0"><set attributeName="opacity" to="1" begin="${(0.25 + wi * 0.028).toFixed(2)}s" fill="freeze"/>${cells}</g>`;
 });
 let monthLabels = '', lastKey = '';
 weeks.forEach((wk, wi) => {
   const key = wk[0].date.slice(0, 7);
   if (key !== lastKey && wi < weeks.length - 2) { monthLabels += `<text class="lab" x="${(gx0 + wi * px).toFixed(1)}" y="${gy0 - 8}">${monthName(key)}</text>`; lastKey = key; }
 });
-const dayLabels = [['Mon', 1], ['Wed', 3], ['Fri', 5]].map(([n, r]) => `<text class="lab" x="${PAD}" y="${gy0 + r * py + 11}">${n}</text>`).join('');
-const legendX = W - 40 - 150;
-const legend = `<text class="lab" x="${legendX - 30}" y="${gy0 + 7 * py + 22}">Less</text>` + COL.map((c, k) => `<text x="${legendX + 14 + k * 16}" y="${gy0 + 7 * py + 22}" fill="${c}">${GLYPH[k]}</text>`).join('') + `<text class="lab" x="${legendX + 14 + 5 * 16 + 4}" y="${gy0 + 7 * py + 22}">More</text>`;
+const dayLabels = [['Mon', 1], ['Wed', 3], ['Fri', 5]].map(([n, r]) => `<text class="lab" x="${PAD}" y="${gy0 + r * py + 9}">${n}</text>`).join('');
+const legendX = W - 40 - 150, legY = gy0 + 7 * py + 14;
+const legend = `<text class="lab" x="${legendX - 30}" y="${legY + 9}">Less</text>` + COL.map((c, k) => `<rect x="${legendX + 8 + k * 15}" y="${legY}" width="11" height="11" rx="2" fill="${c}"/>`).join('') + `<text class="lab" x="${legendX + 8 + 5 * 15 + 4}" y="${legY + 9}">More</text>`;
 
 // stat tiles (3 × 2)
 const tiles = [
@@ -90,7 +94,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
 <text class="t" x="90" y="23">${esc(LOGIN)}@github ~ % ./contributions.sh</text>
 ${monthLabels}${dayLabels}
 ${grid}
-<text class="cap" x="${PAD}" y="${gy0 + 7 * py + 22}">${total.toLocaleString('en-US')} contributions in the last year</text>
+<text class="cap" x="${PAD}" y="${gy0 + 7 * py + 23}">${total.toLocaleString('en-US')} contributions in the last year</text>
 ${legend}
 <text class="t" x="${PAD}" y="${ty0 - 24}">${esc(LOGIN)}@github ~ % ./stats.sh</text>
 ${tileSvg}${barTitle}${bars}
