@@ -43,6 +43,7 @@ const COL = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];   // GitHub
 
 // GitHub's own metrics: 10px cells, 3px gaps
 const px = 13, py = 13, CELL = 10, BOX_X = PAD, BOX_Y = 78, BOX_W = W - 2 * PAD, BOX_H = 164, gx0 = BOX_X + 52, gy0 = BOX_Y + 36;
+const HEAD_START = 1.3;   // the clock starts at load, before the first paint — leave room so the sweep is seen from the first column
 let grid = '';
 weeks.forEach((wk, wi) => {
   // one soft fade per column (53 animations instead of ~740) so it stays smooth even while the page loads
@@ -51,7 +52,7 @@ weeks.forEach((wk, wi) => {
     const l = level(d.contributionCount);
     cells += `<rect x="${(gx0 + wi * px).toFixed(1)}" y="${(gy0 + d.weekday * py).toFixed(1)}" width="${CELL}" height="${CELL}" rx="2" fill="${COL[l]}"/>`;
   });
-  grid += `<g opacity="0"><animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="${(0.1 + wi * 0.028).toFixed(2)}s" fill="freeze"/>${cells}</g>`;
+  grid += `<g opacity="0"><animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="${(HEAD_START + wi * 0.035).toFixed(2)}s" fill="freeze"/>${cells}</g>`;
 });
 let monthLabels = '', lastKey = '';
 weeks.forEach((wk, wi) => {
@@ -78,7 +79,7 @@ const bx0 = 470, by1 = 388, bh = 78, bw = 20, bgap = 7;
 const maxM = Math.max(1, ...months.map((m) => m.n));
 const bars = months.map((m, n) => {
   const h = Math.max(2, Math.round((m.n / maxM) * bh)), x = bx0 + n * (bw + bgap);
-  return `<g opacity="0"><animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="${(0.9 + n * 0.05).toFixed(2)}s" fill="freeze"/><rect x="${x}" y="${by1 - h}" width="${bw}" height="${h}" rx="2" fill="#2f8059"/><rect x="${x}" y="${by1 - h}" width="${bw}" height="3" rx="1.5" fill="#7fd29c"/><text class="lab" x="${x + bw / 2}" y="${by1 + 16}" text-anchor="middle">${monthName(m.key)}</text></g>`;
+  return `<g opacity="0"><animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="${(HEAD_START + 1.2 + n * 0.05).toFixed(2)}s" fill="freeze"/><rect x="${x}" y="${by1 - h}" width="${bw}" height="${h}" rx="2" fill="#2f8059"/><rect x="${x}" y="${by1 - h}" width="${bw}" height="3" rx="1.5" fill="#7fd29c"/><text class="lab" x="${x + bw / 2}" y="${by1 + 16}" text-anchor="middle">${monthName(m.key)}</text></g>`;
 }).join('');
 const barTitle = `<text class="lab" x="${bx0}" y="${ty0 + 10}">$ contributions / month</text>`;
 
