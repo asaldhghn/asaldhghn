@@ -8,7 +8,7 @@ import path from 'node:path';
 
 const LOGIN = process.env.GH_LOGIN || 'asaldhghn';
 const OUT = path.resolve(process.argv[2] || 'assets/dashboard.svg');
-const q = 'query($login:String!){user(login:$login){contributionsCollection{contributionCalendar{totalContributions weeks{contributionDays{date contributionCount weekday}}}}}}';
+const q = 'query($login:String!){user(login:$login){contributionsCollection{contributionCalendar{totalContributions weeks{contributionDays{date contributionCount weekday contributionLevel}}}}}}';
 const data = JSON.parse(execFileSync('gh', ['api', 'graphql', '-f', `query=${q}`, '-f', `login=${LOGIN}`], { encoding: 'utf8' }));
 const cal = data.data.user.contributionsCollection.contributionCalendar;
 const weeks = cal.weeks.map((w) => w.contributionDays);
@@ -37,7 +37,9 @@ const monthName = (k) => MON[parseInt(k.slice(5), 10) - 1];
 const W = 830, H = 452, PAD = 36;
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const maxDay = Math.max(1, ...days.map((d) => d.contributionCount));
-const level = (n) => (n === 0 ? 0 : Math.min(4, Math.ceil((4 * n) / maxDay)));
+// use GitHub's own per-day level (quartiles of your activity), so the shades match the real graph exactly
+const LEVELS = { NONE: 0, FIRST_QUARTILE: 1, SECOND_QUARTILE: 2, THIRD_QUARTILE: 3, FOURTH_QUARTILE: 4 };
+const levelOf = (d) => LEVELS[d.contributionLevel] ?? (d.contributionCount === 0 ? 0 : 1);
 const GLYPH = ['.', '+', '*', '%', '@'];
 const COL = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];   // GitHub dark-theme contribution greens
 
@@ -52,7 +54,7 @@ let emptyCells = '';
 weeks.forEach((wk, wi) => {
   let cells = '';
   wk.forEach((d) => {
-    const l = level(d.contributionCount);
+    const l = levelOf(d);
     const r = `<rect x="${(gx0 + wi * px).toFixed(1)}" y="${(gy0 + d.weekday * py).toFixed(1)}" width="${CELL}" height="${CELL}" rx="2" fill="${COL[l]}"/>`;
     emptyCells += `<rect x="${(gx0 + wi * px).toFixed(1)}" y="${(gy0 + d.weekday * py).toFixed(1)}" width="${CELL}" height="${CELL}" rx="2" fill="${COL[0]}"/>`;   // every cell has an empty square underneath
     if (l > 0) cells += r;
